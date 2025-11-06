@@ -3,7 +3,7 @@
 
 ### Introduction
 
-`modbus` was originally developed by @simonvetter. This project is the fork of the [simonvetter/modbus](https://github.com/simonvetter/modbus).
+`modbus` was originally developed by @simonvetter. This project is the fork of the original [simonvetter/modbus](https://github.com/simonvetter/modbus).
 
 
 ### Description
@@ -15,6 +15,7 @@ devices using native Go types.
 Both client and server components are available.
 
 The client supports the following modes:
+
 - modbus RTU (serial, over both RS-232 and RS-485),
 - modbus TCP (a.k.a. MBAP),
 - modbus TCP over TLS (a.k.a. MBAPS or Modbus Security),
@@ -29,6 +30,7 @@ use RTU frames instead. The client support both so if unsure, try with
 both udp:// and rtuoverudp:// schemes.
 
 The server supports:
+
 - modbus TCP (a.k.a. MBAP),
 - modbus TCP over TLS (a.k.a. MBAPS or Modbus Security).
 
@@ -39,15 +41,16 @@ $ ./modbus-cli --help
 ```
 
 ### Getting started
+
 ```bash
-$ go get github.com/simonvetter/modbus
+$ go get github.com/qba73/modbus
 ```
 
 ### Using the client
 
 ```golang
 import (
-    "github.com/simonvetter/modbus"
+    "github.com/qba73/modbus"
 )
 
 func main() {
