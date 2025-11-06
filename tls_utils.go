@@ -3,7 +3,6 @@ package modbus
 import (
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"time"
@@ -15,7 +14,7 @@ func LoadCertPool(filePath string) (cp *x509.CertPool, err error) {
 
 	// read the entire cert store, which may contain zero, one
 	// or more certificates
-	buf, err = ioutil.ReadFile(filePath)
+	buf, err = os.ReadFile(filePath)
 	if err != nil {
 		return
 	}

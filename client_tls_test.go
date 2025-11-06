@@ -3,8 +3,8 @@ package modbus
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io"
 	"fmt"
+	"io"
 	"net"
 	"testing"
 	"time"
@@ -191,15 +191,15 @@ iaKCVjivzjP1s/q6adzOOZVlVwm7Xw==
 
 // TestTCPOVerTLSClient tests the TLS layer of the modbus client.
 func TestTCPoverTLSClient(t *testing.T) {
-	var err            error
-	var client         *ModbusClient
-	var serverKeyPair  tls.Certificate
-	var clientKeyPair  tls.Certificate
-	var clientCp       *x509.CertPool
-	var serverCp       *x509.CertPool
+	var err error
+	var client *ModbusClient
+	var serverKeyPair tls.Certificate
+	var clientKeyPair tls.Certificate
+	var clientCp *x509.CertPool
+	var serverCp *x509.CertPool
 	var serverHostPort string
-	var serverChan     chan string
-	var regs           []uint16
+	var serverChan chan string
+	var regs []uint16
 
 	serverChan = make(chan string)
 
@@ -333,20 +333,18 @@ func TestTCPoverTLSClient(t *testing.T) {
 	if err != nil {
 		t.Errorf("Close() should have succeeded, got: %v", err)
 	}
-
-	return
 }
 
 func TestTLSClientOnServerTimeout(t *testing.T) {
-	var err            error
-	var client         *ModbusClient
-	var server         *ModbusServer
-	var serverKeyPair  tls.Certificate
-	var clientKeyPair  tls.Certificate
-	var clientCp       *x509.CertPool
-	var serverCp       *x509.CertPool
-	var th	           *tlsTestHandler
-	var reg            uint16
+	var err error
+	var client *ModbusClient
+	var server *ModbusServer
+	var serverKeyPair tls.Certificate
+	var clientKeyPair tls.Certificate
+	var clientCp *x509.CertPool
+	var serverCp *x509.CertPool
+	var th *tlsTestHandler
+	var reg uint16
 
 	th = &tlsTestHandler{}
 	// load server and client keypairs
@@ -373,7 +371,6 @@ func TestTLSClientOnServerTimeout(t *testing.T) {
 		t.Errorf("failed to load client cert into cert pool")
 	}
 
-
 	// load the server cert into the client CA cert pool to get the server cert
 	// accepted by clients
 	clientCp = x509.NewCertPool()
@@ -387,7 +384,7 @@ func TestTLSClientOnServerTimeout(t *testing.T) {
 		TLSServerCert: &serverKeyPair,
 		TLSClientCAs:  serverCp,
 		// disconnect idle clients after 500ms
-		Timeout:       500 * time.Millisecond,
+		Timeout: 500 * time.Millisecond,
 	}, th)
 	if err != nil {
 		t.Errorf("failed to create server: %v", err)
@@ -399,7 +396,7 @@ func TestTLSClientOnServerTimeout(t *testing.T) {
 	}
 
 	// create the modbus client
-	client, err	= NewClient(&ClientConfiguration{
+	client, err = NewClient(&ClientConfiguration{
 		URL:           "tcp+tls://localhost:5802",
 		TLSClientCert: &clientKeyPair,
 		TLSRootCAs:    clientCp,
@@ -442,19 +439,17 @@ func TestTLSClientOnServerTimeout(t *testing.T) {
 	// cleanup
 	client.Close()
 	server.Stop()
-
-	return
 }
 
 // runMockTLSServer spins a test TLS server for use with TestTCPoverTLSClient.
 func runMockTLSServer(t *testing.T, serverKeyPair tls.Certificate,
 	serverCp *x509.CertPool, serverChan chan string) {
-	var err         error
-	var listener    net.Listener
-	var sock        net.Conn
-	var reqCount    uint
+	var err error
+	var listener net.Listener
+	var sock net.Conn
+	var reqCount uint
 	var clientCount uint
-	var buf         []byte
+	var buf []byte
 
 	// let the OS pick an available port on the loopback interface
 	listener, err = tls.Listen("tcp", "localhost:0", &tls.Config{
