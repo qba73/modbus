@@ -103,8 +103,7 @@ func main() {
 	// are used to authenticate the server to the client.
 	// note that a tls.Certificate object can contain both the cert and its key,
 	// which is the case here.
-	serverKeyPair, err = tls.LoadX509KeyPair(
-		"certs/server.cert.pem", "certs/server.key.pem")
+	serverKeyPair, err = tls.LoadX509KeyPair("certs/server.cert.pem", "certs/server.key.pem")
 	if err != nil {
 		fmt.Printf("failed to load server key pair: %v\n", err)
 		os.Exit(1)
@@ -158,10 +157,6 @@ func main() {
 		eh.clock++
 		eh.lock.Unlock()
 	}
-
-	// never reached
-
-	return
 }
 
 // Example handler object, passed to the NewServer() constructor above.
@@ -179,23 +174,22 @@ type exampleHandler struct {
 // Holding register handler method.
 // This method gets called whenever a valid modbus request asking for a holding register
 // operation is received by the server.
-func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersRequest) (res []uint16, err error) {
+func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersRequest) ([]uint16, error) {
 	var regAddr uint16
 
 	// require the "operator" role for write operations (i.e. set the clock).
 	if req.IsWrite && req.ClientRole != "operator" {
 		fmt.Printf("write access denied: client %s missing the 'operator' role (role: '%s')\n",
 			req.ClientAddr, req.ClientRole)
-		err = modbus.ErrIllegalFunction
-		return
+		return []uint16{}, modbus.ErrIllegalFunction
 	}
 
 	// since we're manipulating variables accessed from multiple goroutines,
 	// acquire a lock to avoid concurrency issues.
 	eh.lock.Lock()
-	// release the lock upon return
 	defer eh.lock.Unlock()
 
+	res := make([]uint16, 0)
 	// loop through `quantity` registers
 	for i := 0; i < int(req.Quantity); i++ {
 		// compute the target register address
@@ -222,34 +216,29 @@ func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReq
 
 		// any other address is unknown
 		default:
-			err = modbus.ErrIllegalDataAddress
-			return
+			return []uint16{}, modbus.ErrIllegalDataAddress
 		}
 	}
-
-	return
+	return res, nil
 }
 
 // input registers are not used by this server.
-func (eh *exampleHandler) HandleInputRegisters(req *modbus.InputRegistersRequest) (res []uint16, err error) {
+func (eh *exampleHandler) HandleInputRegisters(req *modbus.InputRegistersRequest) ([]uint16, error) {
 	// this is the equivalent of saying
 	// "input registers are not supported by this device"
-	err = modbus.ErrIllegalFunction
-	return
+	return []uint16{}, modbus.ErrIllegalFunction
 }
 
 // coils are not used by this server.
-func (eh *exampleHandler) HandleCoils(req *modbus.CoilsRequest) (res []bool, err error) {
+func (eh *exampleHandler) HandleCoils(req *modbus.CoilsRequest) ([]bool, error) {
 	// this is the equivalent of saying
 	// "coils are not supported by this device"
-	err = modbus.ErrIllegalFunction
-	return
+	return []bool{}, modbus.ErrIllegalFunction
 }
 
 // discrete inputs are not used by this server.
-func (eh *exampleHandler) HandleDiscreteInputs(req *modbus.DiscreteInputsRequest) (res []bool, err error) {
+func (eh *exampleHandler) HandleDiscreteInputs(req *modbus.DiscreteInputsRequest) ([]bool, error) {
 	// this is the equivalent of saying
 	// "discrete inputs are not supported by this device"
-	err = modbus.ErrIllegalFunction
-	return
+	return []bool{}, modbus.ErrIllegalFunction
 }

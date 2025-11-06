@@ -26,8 +26,7 @@ func main() {
 
 	// load the client certificate and its associated private key, which
 	// are used to authenticate the client to the server
-	clientKeyPair, err = tls.LoadX509KeyPair(
-		"certs/client.cert.pem", "certs/client.key.pem")
+	clientKeyPair, err = tls.LoadX509KeyPair("certs/client.cert.pem", "certs/client.key.pem")
 	if err != nil {
 		fmt.Printf("failed to load client key pair: %v\n", err)
 		os.Exit(1)
@@ -87,6 +86,5 @@ func main() {
 	if err != nil {
 		fmt.Printf("failed to close connection: %v\n", err)
 	}
-
 	os.Exit(0)
 }

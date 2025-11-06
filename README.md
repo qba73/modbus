@@ -169,11 +169,13 @@ func main() {
 ```
 ### Using the server component
 See:
-* [examples/tcp_server.go](examples/tcp_server.go) for a modbus TCP example
-* [examples/tls_server.go](examples/tls_server.go) for TLS and Modbus Security features
+* [tcp_server.go](examples/tcp_server/tcp_server.go) for a modbus TCP example
+* [tls_server.go](examples/tls_server/tls_server.go) for TLS and Modbus Security features
 
 ### Supported function codes, golang object types and endianness/word ordering
+
 Function codes:
+
 * Read coils (0x01)
 * Read discrete inputs (0x02)
 * Read holding registers (0x03)
@@ -184,6 +186,7 @@ Function codes:
 * Write multiple registers (0x10)
 
 Go object types:
+
 * Booleans (coils and discrete inputs)
 * Bytes (input and holding registers)
 * Signed/Unisgned 16-bit integers (input and holding registers)
@@ -193,24 +196,25 @@ Go object types:
 * 64-bit floating point numbers (input and holding registers)
 
 Byte encoding/endianness/word ordering:
+
 * Little and Big endian for byte slices and 16-bit integers
 * Little and Big endian, with and without word swap for 32 and 64-bit
   integers and floating point numbers.
 
 ### Logging ###
+
 Both client and server objects will log to stdout by default.
 This behavior can be overriden by passing a log.Logger object
 through the Logger property of ClientConfiguration/ServerConfiguration.
 
 ### TODO (in no particular order)
+
 * Add RTU (serial) support to the server
 * Add more tests
 * Add diagnostics register support
 * Add fifo register support
 * Add file register support
 
-### Dependencies
-* [github.com/goburrow/serial](https://github.com/goburrow/serial) for access to the serial port (thanks!)
-
 ### License
-MIT.
+
+MIT

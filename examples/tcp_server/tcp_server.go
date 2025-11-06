@@ -67,9 +67,6 @@ func main() {
 		eh.uptime++
 		eh.lock.Unlock()
 	}
-
-	// never reached
-	return
 }
 
 // Example handler object, passed to the NewServer() constructor above.
@@ -103,27 +100,25 @@ type exampleHandler struct {
 // read-only.
 // (read them with ./modbus-cli --target tcp://localhost:5502 rc:0+99, write to register n
 // with ./modbus-cli --target tcp://localhost:5502 wr:n:<true|false>)
-func (eh *exampleHandler) HandleCoils(req *modbus.CoilsRequest) (res []bool, err error) {
+func (eh *exampleHandler) HandleCoils(req *modbus.CoilsRequest) ([]bool, error) {
 	if req.UnitId != 1 {
 		// only accept unit ID #1
 		// note: we're merely filtering here, but we could as well use the unit
 		// ID field to support multiple register maps in a single server.
-		err = modbus.ErrIllegalFunction
-		return
+		return []bool{}, modbus.ErrIllegalFunction
 	}
 
 	// make sure that all registers covered by this request actually exist
 	if int(req.Addr)+int(req.Quantity) > len(eh.coils) {
-		err = modbus.ErrIllegalDataAddress
-		return
+		return []bool{}, modbus.ErrIllegalDataAddress
 	}
 
 	// since we're manipulating variables shared between multiple goroutines,
 	// acquire a lock to avoid concurrency issues.
 	eh.lock.Lock()
-	// release the lock upon return
 	defer eh.lock.Unlock()
 
+	res := make([]bool, 0)
 	// loop through `req.Quantity` registers, from address `req.Addr` to
 	// `req.Addr + req.Quantity - 1`, which here is conveniently `req.Addr + i`
 	for i := 0; i < int(req.Quantity); i++ {
@@ -136,41 +131,36 @@ func (eh *exampleHandler) HandleCoils(req *modbus.CoilsRequest) (res []bool, err
 		// sent back to the client
 		res = append(res, eh.coils[int(req.Addr)+i])
 	}
-
-	return
+	return res, nil
 }
 
 // Discrete input handler method.
 // Note that we're returning ErrIllegalFunction unconditionally.
 // This will cause the client to receive "illegal function", which is the modbus way of
 // reporting that this server does not support/implement the discrete input type.
-func (eh *exampleHandler) HandleDiscreteInputs(req *modbus.DiscreteInputsRequest) (res []bool, err error) {
+func (eh *exampleHandler) HandleDiscreteInputs(req *modbus.DiscreteInputsRequest) ([]bool, error) {
 	// this is the equivalent of saying
 	// "discrete inputs are not supported by this device"
 	// (try it with modbus-cli --target tcp://localhost:5502 rdi:1)
-	err = modbus.ErrIllegalFunction
-
-	return
+	return []bool{}, modbus.ErrIllegalFunction
 }
 
 // Holding register handler method.
 // This method gets called whenever a valid modbus request asking for a holding register
 // operation (either read or write) received by the server.
-func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersRequest) (res []uint16, err error) {
+func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersRequest) ([]uint16, error) {
 	var regAddr uint16
-
 	if req.UnitId != 1 {
 		// only accept unit ID #1
-		err = modbus.ErrIllegalFunction
-		return
+		return []uint16{}, modbus.ErrIllegalFunction
 	}
 
 	// since we're manipulating variables shared between multiple goroutines,
 	// acquire a lock to avoid concurrency issues.
 	eh.lock.Lock()
-	// release the lock upon return
 	defer eh.lock.Unlock()
 
+	res := make([]uint16, 0)
 	// loop through `quantity` registers
 	for i := 0; i < int(req.Quantity); i++ {
 		// compute the target register address
@@ -203,8 +193,7 @@ func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReq
 					// return a modbus "illegal data value" to
 					// let the client know that the value is
 					// not acceptable.
-					err = modbus.ErrIllegalDataValue
-					return
+					return []uint16{}, modbus.ErrIllegalDataValue
 				}
 			}
 			res = append(res, eh.holdingReg2)
@@ -241,32 +230,30 @@ func (eh *exampleHandler) HandleHoldingRegisters(req *modbus.HoldingRegistersReq
 
 		// any other address is unknown
 		default:
-			err = modbus.ErrIllegalDataAddress
-			return
+			return []uint16{}, modbus.ErrIllegalDataAddress
 		}
 	}
-
-	return
+	return res, nil
 }
 
 // Input register handler method.
 // This method gets called whenever a valid modbus request asking for an input register
 // operation is received by the server.
 // Note that input registers are always read-only as per the modbus spec.
-func (eh *exampleHandler) HandleInputRegisters(req *modbus.InputRegistersRequest) (res []uint16, err error) {
+func (eh *exampleHandler) HandleInputRegisters(req *modbus.InputRegistersRequest) ([]uint16, error) {
 	var unixTs_s uint32
 	var minusOne int16 = -1
 
 	if req.UnitId != 1 {
 		// only accept unit ID #1
-		err = modbus.ErrIllegalFunction
-		return
+		return []uint16{}, modbus.ErrIllegalFunction
 	}
 
 	// get the current unix timestamp, converted as a 32-bit unsigned integer for
 	// simplicity
 	unixTs_s = uint32(time.Now().Unix() & 0xffffffff)
 
+	res := make([]uint16, 0)
 	// loop through all register addresses from req.addr to req.addr + req.Quantity - 1
 	for regAddr := req.Addr; regAddr < req.Addr+req.Quantity; regAddr++ {
 		switch regAddr {
@@ -275,13 +262,11 @@ func (eh *exampleHandler) HandleInputRegisters(req *modbus.InputRegistersRequest
 			// 16-bit integer
 			// (read it with modbus-cli --target tcp://localhost:5502 ri:uint16:100)
 			res = append(res, 0x1111)
-
 		case 101:
 			// return the static value -1 at address 101, as a signed 16-bit
 			// integer
 			// (read it with modbus-cli --target tcp://localhost:5502 ri:int16:101)
 			res = append(res, uint16(minusOne))
-
 		// expose our uptime counter, encoded as a 32-bit unsigned integer in
 		// input registers 200-201
 		// (read it with modbus-cli --target tcp://localhost:5502 ri:uint32:200)
@@ -291,44 +276,36 @@ func (eh *exampleHandler) HandleInputRegisters(req *modbus.InputRegistersRequest
 			eh.lock.RLock()
 			res = append(res, uint16((eh.uptime>>16)&0xffff))
 			eh.lock.RUnlock()
-
 		case 201:
 			// return the 16 least significant bits of the uptime counter
 			// (again, using locking to avoid concurrency issues)
 			eh.lock.RLock()
 			res = append(res, uint16(eh.uptime&0xffff))
 			eh.lock.RUnlock()
-
 		// expose the current unix timestamp, encoded as a 32-bit unsigned integer
 		// in input registers 202-203
 		// (read it with modbus-cli --target tcp://localhost:5502 ri:uint32:202)
 		case 202:
 			// return the 16 most significant bits of the current unix time
 			res = append(res, uint16((unixTs_s>>16)&0xffff))
-
 		case 203:
 			// return the 16 least significant bits of the current unix time
 			res = append(res, uint16(unixTs_s&0xffff))
-
 		// return 3.1415, encoded as a 32-bit floating point number in input
 		// registers 300-301
 		// (read it with modbus-cli --target tcp://localhost:5502 ri:float32:300)
 		case 300:
 			// returh the 16 most significant bits of the number
 			res = append(res, uint16((math.Float32bits(3.1415)>>16)&0xffff))
-
 		case 301:
 			// returh the 16 least significant bits of the number
 			res = append(res, uint16((math.Float32bits(3.1415))&0xffff))
-
 		// attempting to access any input register address other than
 		// those defined above will result in an illegal data address
 		// exception client-side.
 		default:
-			err = modbus.ErrIllegalDataAddress
-			return
+			return []uint16{}, modbus.ErrIllegalDataAddress
 		}
 	}
-
-	return
+	return res, nil
 }
