@@ -3,6 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/qba73/modbus)](https://goreportcard.com/report/github.com/qba73/modbus)
 ![GitHub](https://img.shields.io/github/license/qba73/modbus)
 [![CodeQL](https://github.com/qba73/modbus/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/qba73/modbus/actions/workflows/github-code-scanning/codeql)
+[![Scorecard](https://github.com/qba73/modbus/actions/workflows/scorecard.yml/badge.svg)](https://github.com/qba73/modbus/actions/workflows/scorecard.yml)
 
 
 ## Go modbus stack
