@@ -135,7 +135,7 @@ func main() {
 		}
 		config.TLSClientCert = &clientKeyPair
 
-		config.TLSRootCAs, err = modbus.LoadCertPool(caPath)
+		config.TLSRootCAs, err = modbus.LoadCertPoolFromFile(caPath)
 		if err != nil {
 			fmt.Printf("failed to load tls CA/server certificate: %v\n", err)
 			os.Exit(1)
