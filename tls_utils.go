@@ -28,7 +28,9 @@ func LoadCertPoolFromFile(filePath string) (*x509.CertPool, error) {
 // It returns and error when certificates are missing.
 func LoadCertPool(r io.Reader) (*x509.CertPool, error) {
 	buf := &bytes.Buffer{}
-	io.Copy(buf, r)
+	if _, err := io.Copy(buf, r); err != nil {
+		return nil, err
+	}
 	if buf.Len() == 0 {
 		return nil, errors.New("no certs")
 	}
