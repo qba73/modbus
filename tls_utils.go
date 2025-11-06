@@ -1,35 +1,41 @@
 package modbus
 
 import (
+	"bytes"
 	"crypto/x509"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"time"
 )
 
-// LoadCertPool loads a certificate store from a file into a CertPool object.
-func LoadCertPool(filePath string) (*x509.CertPool, error) {
-	var buf []byte
-
-	// read the entire cert store, which may contain zero, one
-	// or more certificates
+// LoadCertPoolFromFile loads a certificate store from a file into a CertPool object.
+func LoadCertPoolFromFile(filePath string) (*x509.CertPool, error) {
+	// read the entire cert store, which may contain zero, one or more certificates
 	buf, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-
 	if len(buf) == 0 {
 		return nil, fmt.Errorf("%v: empty file", filePath)
 	}
+	return LoadCertPool(bytes.NewReader(buf))
+}
 
-	// add these certs to the pool
+// LoadCertPool loads certificates from given io.Reader and returns the CertPool.
+// It returns and error when certificates are missing.
+func LoadCertPool(r io.Reader) (*x509.CertPool, error) {
+	buf := &bytes.Buffer{}
+	io.Copy(buf, r)
+	if buf.Len() == 0 {
+		return nil, errors.New("no certs")
+	}
+	// add certs to the pool
 	cp := x509.NewCertPool()
-	cp.AppendCertsFromPEM(buf)
-
-	// let the caller know if no usable certificate was found
-	if len(cp.Subjects()) == 0 {
-		return nil, fmt.Errorf("%v: no certificate found", filePath)
+	if ok := cp.AppendCertsFromPEM(buf.Bytes()); !ok {
+		return nil, errors.New("failed to parse and load certificates")
 	}
 	return cp, nil
 }

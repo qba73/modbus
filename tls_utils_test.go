@@ -1,15 +1,14 @@
-package modbus
+package modbus_test
 
 import (
+	"bytes"
 	"crypto/x509"
-	"io/ioutil"
-
-	"os"
 	"testing"
+
+	"github.com/qba73/modbus"
 )
 
-// random certs from /etc/ssl/certs
-const validCerts = `-----BEGIN CERTIFICATE-----
+var validCerts = []byte(`-----BEGIN CERTIFICATE-----
 MIIFcDCCA1igAwIBAgIEAJiWjTANBgkqhkiG9w0BAQsFADBYMQswCQYDVQQGEwJO
 TDEeMBwGA1UECgwVU3RhYXQgZGVyIE5lZGVybGFuZGVuMSkwJwYDVQQDDCBTdGFh
 dCBkZXIgTmVkZXJsYW5kZW4gRVYgUm9vdCBDQTAeFw0xMDEyMDgxMTE5MjlaFw0y
@@ -63,88 +62,36 @@ IzpXl/V6ME+un2pMSyuOoAPjPuCp1NJ70rOo4nI8rZ7/gFnkm0W09juwzTkZmDLl
 xbrYNuSD7Odlt79jWvNGr4GUN9RBjNYj1h7P9WgbRGOiWrqnNVmh5XAFmw4jV5mU
 Cm26OWMohpLzGITY+9HPBVZkVw==
 -----END CERTIFICATE-----
-`
+`)
 
-func TestLoadCertPool(t *testing.T) {
-	var err error
-	var cp *x509.CertPool
-	var fd *os.File
-	var path string
+func TestLoadCertPool_LoadsCertificatesFromReader(t *testing.T) {
+	t.Parallel()
 
-	// attemp to load a non-existent file: should fail
-	_, err = LoadCertPool("non/existent/path/to/store")
+	got, err := modbus.LoadCertPool(bytes.NewReader(validCerts))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := &x509.CertPool{}
+
+	if got.Equal(want) {
+		t.Errorf("got empty CertPool")
+	}
+}
+
+func TestLoadCertPool_ReturnsErrorForMissingCerts(t *testing.T) {
+	t.Parallel()
+
+	_, err := modbus.LoadCertPool(bytes.NewReader([]byte("")))
 	if err == nil {
-		t.Errorf("LoadCertPool() should have failed")
+		t.Error("want err for missing certs, got nil")
 	}
+}
 
-	// create an empty file and attempt to load it: should fail
-	fd, err = ioutil.TempFile("", "modbus_tls_utils_test")
-	if err != nil {
-		t.Errorf("failed to create temp file: %v", err)
-		return
-	}
-	path = fd.Name()
+func TestLoadCertPool_ReturnsErrorForInvalidCerts(t *testing.T) {
+	t.Parallel()
 
-	defer os.Remove(path)
-	err = fd.Close()
-	if err != nil {
-		t.Errorf("failed to close temp file: %v", err)
-		return
-	}
-
-	_, err = LoadCertPool(path)
+	_, err := modbus.LoadCertPool(bytes.NewReader([]byte("bogus-certificates")))
 	if err == nil {
-		t.Errorf("LoadCertPool() should have failed")
-	}
-
-	// put garbage into a file and attempt to load it: should fail
-	fd, err = ioutil.TempFile("", "modbus_tls_utils_test")
-	if err != nil {
-		t.Errorf("failed to create temp file: %v", err)
-	}
-	path = fd.Name()
-
-	defer os.Remove(path)
-	_, err = fd.Write([]byte("somejunk"))
-	if err != nil {
-		t.Errorf("failed to write to temp file: %v", err)
-	}
-	err = fd.Close()
-	if err != nil {
-		t.Errorf("failed to close temp file: %v", err)
-		return
-	}
-
-	_, err = LoadCertPool(path)
-	if err == nil {
-		t.Errorf("LoadCertPool() should have failed")
-	}
-
-	// now write two certs to a file and try to load it: should succeed
-	fd, err = ioutil.TempFile("", "modbus_tls_utils_test")
-	if err != nil {
-		t.Errorf("failed to create temp file: %v", err)
-	}
-	path = fd.Name()
-
-	defer os.Remove(path)
-	_, err = fd.Write([]byte(validCerts))
-	if err != nil {
-		t.Errorf("failed to write to temp file: %v", err)
-	}
-	err = fd.Close()
-	if err != nil {
-		t.Errorf("failed to close temp file: %v", err)
-		return
-	}
-
-	cp, err = LoadCertPool(path)
-	if err != nil {
-		t.Errorf("LoadCertPool() should have succeeded, got: %v", err)
-	}
-
-	// expect two certs in the cert pool
-	if len(cp.Subjects()) != 2 {
-		t.Errorf("expected 2 certs in the pool, saw: %v", len(cp.Subjects()))
+		t.Error("want err for missing certs, got nil")
 	}
 }

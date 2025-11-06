@@ -113,7 +113,7 @@ func main() {
 	// - the CA (Certificate Authority) certificate(s) used to sign client certs,
 	// - the list of allowed client certs, if client certificates are self-signed or
 	//   if client certificate pinning is required.
-	clientCertPool, err = modbus.LoadCertPool("certs/clients.cert.pem")
+	clientCertPool, err = modbus.LoadCertPoolFromFile("certs/clients.cert.pem")
 	if err != nil {
 		fmt.Printf("failed to load CA/client certificates: %v\n", err)
 		os.Exit(1)

@@ -34,7 +34,7 @@ func main() {
 
 	// load either the server certificate or the certificate of the CA
 	// (Certificate Authority) which signed the server certificate
-	serverCertPool, err = modbus.LoadCertPool("certs/server.cert.pem")
+	serverCertPool, err = modbus.LoadCertPoolFromFile("certs/server.cert.pem")
 	if err != nil {
 		fmt.Printf("failed to load server certificate/CA: %v\n", err)
 		os.Exit(1)
