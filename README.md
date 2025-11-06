@@ -5,6 +5,7 @@
 [![CodeQL](https://github.com/qba73/modbus/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/qba73/modbus/actions/workflows/github-code-scanning/codeql)
 [![Scorecard](https://github.com/qba73/modbus/actions/workflows/scorecard.yml/badge.svg)](https://github.com/qba73/modbus/actions/workflows/scorecard.yml)
 [![Security audit](https://github.com/qba73/modbus/actions/workflows/govulncheck.yml/badge.svg)](https://github.com/qba73/modbus/actions/workflows/govulncheck.yml)
+![Maintenance](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
 
 
 ## Go modbus stack
